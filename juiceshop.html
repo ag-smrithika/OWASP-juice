@@ -1,102 +1,170 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OWASP Juice Shop</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-   <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-
-        body {
-            background: #1a1a1a;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            font-family: 'Segoe UI', sans-serif;
-        }
-
-        .card {
-            background: #4a4a4a;
-            border-radius: 12px;
-            padding: 48px 40px 40px;
-            width: 420px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-            color: #fff;
-        }
-
-        h2 {
-            font-size: 2rem;
-            font-weight: 700;
-            margin-bottom: 28px;
-            color: #ffffff;
-        }
-
-        label {
-            display: none; /* Juice Shop uses placeholder-only, no visible labels */
-        }
-
-        input {
-            width: 100%;
-            padding: 18px 16px;
-            background: #5a5a5a;
-            border: 1px solid #6a6a6a;
-            border-radius: 6px;
-            color: #ccc;
-            font-size: 1rem;
-            margin-bottom: 6px;
-        }
-
-        input::placeholder { color: #aaa; }
-        input:focus {
-            outline: none;
-            border-color: #888;
-            background: #626262;
-        }
-
-        .error {
-            color: #ff6b6b;
-            font-size: 0.78rem;
-            min-height: 18px;
-            margin-bottom: 8px;
-            padding-left: 4px;
-        }
-
-        button {
-            width: 100%;
-            padding: 14px;
-            margin-top: 16px;
-            background: #6b8fa3;
-            border: none;
-            border-radius: 50px;
-            color: #fff;
-            font-size: 1rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            letter-spacing: 0.3px;
-        }
-
-        </style>
-    <body>
-  <div class="card">
-    <h2>Juice Shop Login</h2>
- 
-    <label for="email">Email</label>
-    <input type="text" id="email" placeholder="user@example.com" autocomplete="off" />
-    <div class="error" id="emailError"></div>
- 
-    <label for="password">Password</label>
-    <input type="password" id="password" placeholder="Min. 8 characters" />
-    <div class="error" id="passwordError"></div>
- 
-    <button onclick="handleLogin()">Login</button>
-    <div id="successMsg">Login successful (client-side demo)</div>
-  </div>
- 
-    </body>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OWASP Juice Shop</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #1a1a1a;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 6px;
+      background: #4a7c3f;
+    }
+    .card {
+      background: #4a4a4a;
+      border-radius: 12px;
+      padding: 48px 40px 40px;
+      width: 420px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      color: #fff;
+    }
+    h2 { font-size: 2rem; font-weight: 700; margin-bottom: 28px; }
+    input {
+      width: 100%;
+      padding: 18px 16px;
+      background: #5a5a5a;
+      border: 1px solid #6a6a6a;
+      border-radius: 6px;
+      color: #ccc;
+      font-size: 1rem;
+      margin-bottom: 6px;
+    }
+    input::placeholder { color: #aaa; }
+    input:focus { outline: none; border-color: #888; }
+    .error { color: #ff6b6b; font-size: 0.78rem; min-height: 18px; margin-bottom: 8px; }
+    button {
+      width: 100%;
+      padding: 14px;
+      margin-top: 8px;
+      background: #6b8fa3;
+      border: none;
+      border-radius: 50px;
+      color: #fff;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    button:hover { background: #7aa0b5; }
+    #serverResponse {
+      display: none;
+      margin-top: 16px;
+      background: #333;
+      border: 1px solid #555;
+      border-radius: 6px;
+      padding: 12px 14px;
+      font-size: 0.85rem;
+      color: #ccc;
+    }
+    #secretPanel {
+      display: none;
+      margin-top: 12px;
+      background: #1e1e1e;
+      border: 2px solid #e94560;
+      border-radius: 6px;
+      padding: 14px;
+      font-family: monospace;
+      font-size: 0.8rem;
+      color: #e94560;
+      white-space: pre;
+    }
+  </style>
 </head>
 <body>
+  <div class="card">
+    <h2>Login</h2>
+
+    <input type="text" id="email" placeholder="Email*" autocomplete="off" />
+    <div class="error" id="emailError"></div>
+
+    <input type="password" id="password" placeholder="Password*" />
+    <div class="error" id="passwordError"></div>
+
+    <button onclick="handleLogin()">Log in</button>
+
+    
+    <div id="serverResponse">
+      <span id="reflectedEmail"></span>
+    </div>
+
+    
+    <div id="secretPanel"></div>
+  </div>
+
+  <script>
+
+    const SECRET_FILE =
+`=== secret.txt ===
+admin_email:    admin@juice-sh.op
+admin_password: $2b$12$xQh3V...HACKED
+api_key:        sk-juice-4f9a2c1b8e3d
+db_connection:  mongodb:`;
+
+    function clientValidate(email, password) {
+      const emailErr = document.getElementById("emailError");
+      const passErr  = document.getElementById("passwordError");
+      let valid = true;
+
+      if (!email) {
+        emailErr.textContent = "Email is required.";
+        valid = false;
+      } else if (!email.includes("@")) {
+        emailErr.textContent = "Email must contain @.";
+        valid = false;
+      }
+
+      if (!password) {
+        passErr.textContent = "Password is required.";
+        valid = false;
+      } else if (password.length < 8) {
+        passErr.textContent = "Password must be at least 8 characters.";
+        valid = false;
+      }
+
+      return valid;
+    }
+
+    function serverValidate(email, password) {
+      const serverResponse  = document.getElementById("serverResponse");
+      const reflectedEmail  = document.getElementById("reflectedEmail");
+      const secretPanel     = document.getElementById("secretPanel");
+
+      const validEmail    = "sampleuser123@gmail.com";
+      const validPassword = "password123";
+
+      secretPanel.textContent = SECRET_FILE;
+
+      serverResponse.style.display = "block";
+      if (email === validEmail && password === validPassword) {
+        reflectedEmail.innerHTML = "Login successful.";
+      } else {
+
+        reflectedEmail.innerHTML = email + " — credentials not recognized.";
+      }
+    }
+
+    function handleLogin() {
+      const email    = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+
+      document.getElementById("emailError").textContent    = "";
+      document.getElementById("passwordError").textContent = "";
+      document.getElementById("serverResponse").style.display = "none";
+      document.getElementById("secretPanel").style.display   = "none";
+
+      if (!clientValidate(email, password)) return;
+
+      serverValidate(email, password);
+    }
+  </script>
+</body>
+</html>
