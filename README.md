@@ -14,7 +14,7 @@ Open `login.html` in any browser. No server or dependencies needed.
 ## XSS Attack
 
 Paste this into the email field and click Log in:
-<img src=x onerror="document.getElementById('secretPanel').style.display='block'">@x
+"\<img src=x onerror="document.getElementById('secretPanel').style.display='block'"\>@x"
 
 
 This bypasses client-side validation and exploits an unsafe `innerHTML` call to expose a hidden `secret.txt` panel.
